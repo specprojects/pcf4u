@@ -46,7 +46,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          # Use the npm cache only when package-lock.json is committed (otherwise setup-node fails).
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -58,7 +59,17 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install JS dependencies
-        run: npm ci
+        run: |
+          if [ ! -f package.json ]; then
+            echo "::error::package.json is not at the repository root. Upload the CONTENTS of the PCF4U folder (App.tsx, package.json, src/ …) to the root, not the PCF4U folder itself."
+            exit 1
+          fi
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            echo "::warning::package-lock.json is missing – using npm install. Commit package-lock.json for repeatable builds."
+            npm install --no-audit --no-fund
+          fi
 
       - name: Typecheck
         run: npx tsc --noEmit
