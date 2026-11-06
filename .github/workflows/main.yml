@@ -57,6 +57,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The default list includes the old 'tools' package, which no longer exists in the SDK
+          # repository ("Failed to find package 'tools'"). Gradle downloads the platform / build-tools it needs.
+          packages: platform-tools
 
       - name: Install JS dependencies
         run: |
